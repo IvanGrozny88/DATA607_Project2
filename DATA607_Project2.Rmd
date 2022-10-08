@@ -1,0 +1,98 @@
+---
+title: "DATA607_Project2"
+author: "IvanTikhonov"
+date: "2022-10-08"
+output: html_document
+---
+The goal of this assignment is to give you practice in preparing different datasets for downstream
+analysis work.
+Your task is to:
+(1) Choose any three of the “wide” datasets identified in the Week 6 Discussion items. (You may
+use your own dataset; please don’t use my Sample Post dataset, since that was used in your
+Week 6 assignment!) For each of the three chosen datasets:
+ Create a .CSV file (or optionally, a MySQL database!) that includes all of the information
+included in the dataset. You’re encouraged to use a “wide” structure similar to how the
+information appears in the discussion item, so that you can practice tidying and
+transformations as described below.
+ Read the information from your .CSV file into R, and use tidyr and dplyr as needed to
+tidy and transform your data. [Most of your grade will be based on this step!]
+ Perform the analysis requested in the discussion item.
+ Your code should be in an R Markdown file, posted to rpubs.com, and should include
+narrative descriptions of your data cleanup work, analysis, and conclusions.
+(2) Please include in your homework submission, for each of the three chosen datasets:
+ The URL to the .Rmd file in your GitHub repository, and
+ The URL for your rpubs.com web page.
+```{r}
+library( dplyr )
+library( tidyr )
+getURL <- "https://raw.githubusercontent.com/IvanGrozny88/DATA607_Project2/main/Age5-14_deaths_2018.csv"
+
+Children_death_estimates_df <- read.csv(getURL, header = TRUE, sep = ",", skip = 12)
+
+head(Children_death_estimates_df)
+
+```
+Now we are melting the data set, that means all the columns which are data are being converted to separate columns.
+
+
+```{r}
+Children_death_estimates_df_molten <- Children_death_estimates_df %>% gather("year", "Number.of.deaths", 3:43)
+head(Children_death_estimates_df_molten)
+```
+
+
+```{r}
+Children_death_estimates_df_molten$year <- substr(Children_death_estimates_df_molten$year, 2, 5)
+Children_death_estimates_df_molten$Number.of.deaths <- gsub(",", "", Children_death_estimates_df_molten$Number.of.deaths)
+
+head(Children_death_estimates_df_molten)
+
+```
+
+```{r}
+Children_death_estimates_df_molten_median <- Children_death_estimates_df_molten %>% filter(Children_death_estimates_df_molten$Uncertainty.bounds. == "Median", Children_death_estimates_df_molten$Region.Name != "World")
+
+head(Children_death_estimates_df_molten_median)
+
+```
+
+```{r}
+Children_death_estimates_df_molten_median <- Children_death_estimates_df_molten_median %>% arrange(Region.Name, year)
+```
+DATASET-2
+The secod data set is for the country wise data for Balance of payment as a percent of that country’s GDP
+Step-1 - To read the data set from Github location into R
+https://raw.githubusercontent.com/IvanGrozny88/DATA607_Project2/main/UN_MigrantStockByOriginAndDestination_2019.csv
+Original file was excel file which was saved as a csv file. The data from the csv file will be transformed from a wide set to a long set along with other cleanup where neccessary in order to do further analysis on the data set.
+Reference to website that linked the dataset and explained methods to tidy the dataset. The methods contained in the website was mostly used to understand the data, the only one directly used was selecting the columns with the select function.
+https://www.un.org/en/development/desa/population/migration/data/estimates2/data/UN_MigrantStockByOriginAndDestination_2019.xlsx
+
+```{r}
+df_wide<- read.csv("C:/Users/Ivan/OneDrive/Desktop/UN_MigrantStockByOriginAndDestination_2019.csv", header=FALSE, sep=",")
+df2_wide<-df_wide[-c(1:15),]
+head(df2_wide[1:10])
+
+```
+There are over 200 variable country columns. Destination countries will be picked to turn into rows. Subset will be applied on Origin Country, with the origin country being United States of America.
+
+```{r}
+library(tidyr)
+df3_wide<-select(df2_wide,-V2,-V4,-V5,-V7)
+df4_wide<-rename(df3_wide,Year=V1,Origin=V3,group=V6,Afghanistan=V10,Albania=V11,Algeria=V12,Angola=V15)
+df5_wide<- subset(df4_wide,Origin=="United States of America")
+df6_wide<-select(df5_wide,Year,Origin,Afghanistan,Albania,Algeria,Angola)
+df2_long<-gather(df6_wide,Destination,Persons,-Origin,-Year)
+df2_long
+```
+Chart created to show relationship between United Stated migration to Afghanistan. Chart is showing number of person migrating to a specific country by year. In this case, it is showing the number of persons migrating to Afghanistan from the US has been increasing every 5 yrs from about 28,000 in 1990 to 80,000 in 2019.
+```{r}
+library(ggplot2)
+df3_long<-subset(df2_long,Destination=="Afghanistan")
+ggplot(df3_long, aes(x=df3_long$Year, y=df3_long$Persons, fill=df3_long$Destination)) + geom_bar(stat='identity', position='dodge')
+```
+
+
+
+
+
+
